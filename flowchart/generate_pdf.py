@@ -38,23 +38,48 @@ COLOR_TEXT         = HexColor("#1A1A2E")
 COLOR_TITLE_BG     = HexColor("#2C3E50")
 
 
+FONT_SEARCH_PATHS = [
+    # Windows
+    r"C:\Windows\Fonts",
+    os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts"),
+    # Linux
+    "/usr/share/fonts/truetype/dejavu",
+    "/usr/share/fonts/truetype/liberation",
+    # рядом со скриптом
+    os.path.dirname(__file__),
+]
+
+FONT_CANDIDATES = {
+    "CyrFont":      ["arial.ttf",      "Arial.ttf",      "DejaVuSans.ttf",      "LiberationSans-Regular.ttf"],
+    "CyrFont-Bold": ["arialbd.ttf",    "Arial Bold.ttf", "DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf"],
+}
+
+
+def _find_font_file(names):
+    for directory in FONT_SEARCH_PATHS:
+        for name in names:
+            path = os.path.join(directory, name)
+            if os.path.exists(path):
+                return path
+    return None
+
+
 def _register_fonts():
-    base = os.path.dirname(__file__)
-    for name, fname in [
-        ("DejaVuSans",       "DejaVuSans.ttf"),
-        ("DejaVuSans-Bold",  "DejaVuSans-Bold.ttf"),
-    ]:
-        path = os.path.join(base, fname)
-        if os.path.exists(path):
-            pdfmetrics.registerFont(TTFont(name, path))
+    for reg_name, candidates in FONT_CANDIDATES.items():
+        path = _find_font_file(candidates)
+        if path:
+            try:
+                pdfmetrics.registerFont(TTFont(reg_name, path))
+            except Exception:
+                pass
 
 
 def _font(bold=False):
     fonts = pdfmetrics.getRegisteredFontNames()
-    if bold and "DejaVuSans-Bold" in fonts:
-        return "DejaVuSans-Bold"
-    if not bold and "DejaVuSans" in fonts:
-        return "DejaVuSans"
+    if bold and "CyrFont-Bold" in fonts:
+        return "CyrFont-Bold"
+    if not bold and "CyrFont" in fonts:
+        return "CyrFont"
     return "Helvetica-Bold" if bold else "Helvetica"
 
 
